@@ -1,0 +1,183 @@
+# Compiled files
+*.elc
+*.eln
+
+# Backup files
+*~
+\#*\#
+.\#*
+
+# Auto-save files
+.saves-*
+auto-save-list/
+
+# Lock files
+.*.lock
+*.lock
+
+# Package management
+elpa/
+elpaca/
+straight/
+quelpa/
+
+# Native compilation cache
+eln-cache/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Session files
+.session
+.lsp-session-*
+session.*
+
+# History files
+history
+savehist
+recentf
+places
+
+# Projectile
+projectile-bookmarks.eld
+projectile.cache
+.projectile
+
+# Org mode
+.org-id-locations
+org-clock-save.el
+
+# Persistent scratch
+.persistent-scratch
+
+# Transient
+transient/
+
+# Tree-sitter
+tree-sitter/
+
+# Server
+server/
+
+# Tramp
+tramp
+.tramp_history
+tramp-save/
+
+# Undo
+.undo/
+undo-tree-history/
+
+# LSP
+.lsp/
+.dap-breakpoints
+
+# DAP
+.dap/
+
+# Company
+company-statistics-cache.el
+
+# Forge
+forge-database.sqlite
+
+# Magit
+magit-todos-cache
+
+# URL
+url/
+
+# Network security
+network-security.data
+
+# Custom file (as you've set it to /dev/null)
+custom.el
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Request
+request/
+
+# Bookmark
+bookmarks
+
+# Eshell
+eshell/
+
+# Games
+games/
+
+# Image dired
+image-dired/
+
+# TAGS
+TAGS
+tags
+GTAGS
+GRTAGS
+GPATH
+
+# Miscellaneous
+.mc-lists.el
+smex-items
+ido.last
+.emacs.desktop
+.emacs.desktop.lock
+desktop/
+semanticdb/
+srecode-map.el
+ede-projects.el
+.historian
+.achievements
+.sx/
+irony/
+.yas-compiled-snippets.el
+anaconda-mode/
+.dired-history
+vimish-fold/
+.vimish-fold-cache
+magithub/
+treemacs-persist
+treemacs-last-error
+persp-confs/
+.persp-confs/
+.litable-lists.el
+ac-comphist.dat
+.org-timestamps/
+org-roam.db
+org-roam-db.el
+ltximg/
+_minted*/
+/TeX-auto/
+/TeX-output/
+.auctex-auto/
+preview-latex/
+.texlive*/
+var/
+.cask/
+*.sqlite
+*.db
+speed-type/
+emojis/
+.cache.el
+.last-package-update-day
+eclipse.jdt.ls/
+workspace/
+eaf/
+quelpa-melpa-cache
+*.eld
+.extension/
+
+flycheck_*.el
+/projects
