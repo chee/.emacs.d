@@ -1,22 +1,12 @@
-;; #+title: Common Lisp
-
-
-;; [[file:../../notebook/docfiles/emacs/setup/common-lisp.org::+begin_src emacs-lisp :comments both :mkdirp yes :tangle ~/.emacs.d/chee/set-up-common-lisp.el][No heading:1]]
+;;; -*- lexical-binding: t -*-
 (provide 'set-up-common-lisp)
-;; No heading:1 ends here
-
 ;; Emacs
 ;; SLIME uses inferior-lisp variables when they are there.
-
-
-;; [[file:../../notebook/docfiles/emacs/setup/common-lisp.org::*Emacs][Emacs:1]]
 (use-package inf-lisp
   :ensure nil
   :config
   (setq inferior-lisp-program "sbcl"))
-;; Emacs:1 ends here
 
-;; [[file:../../notebook/docfiles/emacs/setup/common-lisp.org::*Emacs][Emacs:2]]
 ;; corfu completions powered by SLIME
 (defun +cape-slimy-rabbit (&optional interactive)
   (interactive)
@@ -31,9 +21,7 @@
           :category 'slimy :sort nil)
        :annotation-function (lambda (_) " common lisp")
        :exclusive 'no)))
-;; Emacs:2 ends here
 
-;; [[file:../../notebook/docfiles/emacs/setup/common-lisp.org::*Emacs][Emacs:3]]
 (use-package slime
   :ensure t
   :config
@@ -73,10 +61,10 @@
             ;; TODO split this into multiple shorter lists when big
             (dolist (function-group (seq-partition defined-functions 100))
               (let* ((function-names (mapcar
-                              (-compose #'downcase #'symbol-name)
-                              defined-functions))
-                     (regex-ors (string-join function-names "\\|"))
-                     (regex (format "(\\(%s \\)" regex-ors)))
+                                       (-compose #'downcase #'symbol-name)
+                                       defined-functions))
+                      (regex-ors (string-join function-names "\\|"))
+                      (regex (format "(\\(%s \\)" regex-ors)))
                 (font-lock-add-keywords 'lisp-mode `((,regex . (1 font-lock-keyword-face))))
                 (lisp-mode))))))))
 
@@ -143,4 +131,3 @@
   :config
   (bind-keys
     ("s-;" . (lambda nil (interactive) (previous-window-any-frame)))))
-;; Emacs:4 ends here

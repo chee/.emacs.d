@@ -397,11 +397,11 @@
               buffer-file-name
               (eq major-mode 'org-mode)
               (not (string-match "_archive$" buffer-file-name)))
-				  (if (string-match
-								  (expand-file-name docfiles/directory)
-								  (expand-file-name buffer-file-name))
-						  (docfiles/tangle-file buffer-file-name)
-						  (org-babel-tangle)))))
+				(if (string-match
+							(expand-file-name docfiles/directory)
+							(expand-file-name buffer-file-name))
+					(docfiles/tangle-file buffer-file-name)
+					(org-babel-tangle)))))
 	(add-hook 'after-save-hook 'chee/auto-tangle)
 	(setf org-todo-keywords
 		'((sequence
@@ -523,70 +523,7 @@
   (face-spec-set
 	  'org-superstar-item
 		'((t (:family "futura")))))
-;; Superstar:1 ends here
-
-;; Journal
-
-;; This takes care of some stuff i used to configure by hand for my daily notes.
-;; It carries over TODO notes from the day before, which is great and fits my lifestyle.
-
-
-;; [[file:../../notebook/docfiles/emacs/setup/org.org::*Journal][Journal:1]]
-;; this thing is cool! it carries over yesterday's todo notes
-(use-package org-journal
-  :ensure t
-  :after org
-  :config
-  (setq org-journal-dir (expand-file-name "days/" org-directory))
-  (setq org-journal-file-type 'daily)
-  (setq org-journal-file-format "%F.org")
-  (setq org-journal-time-format ""))
-;; Journal:1 ends here
 
 ;; Roam
-
 ;; OK, I'll give it a try.
-
-
-;; [[file:../../notebook/docfiles/emacs/setup/org.org::*Roam][Roam:1]]
-(use-package org-roam
-  :ensure t
-  :custom
-  (org-roam-directory (file-truename "~/cherries/documents/z/"))
-  :config
-  (bind-keys
-    :map notebook/map
-      :prefix-map notebook/roam/map
-      :prefix "s-n"
-      ("s-l" . org-roam-buffer-toggle)
-      ("s-f" . org-roam-node-find)
-      ("s-g" . org-roam-graph)
-      ("s-i" . org-roam-node-insert)
-      ("s-n" . org-roam-capture)
-      ;; Dailies
-      ("s-j" . org-roam-dailies-capture-today))
-  (setq org-roam-database-connector 'sqlite-builtin)
-  (setq org-roam-node-display-template
-    (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
-  (org-roam-db-autosync-mode))
-
-(use-package org-roam-protocol
-  :after org-roam
-  :ensure nil)
-
-(defun eval-defun-without-ensure nil
-  (interactive)
-  (save-excursion
-    (beginning-of-defun)
-    (let ((end (search-forward ":ensure t"))
-           (start (search-backward ":ensure t")))
-      (delete-region start end)
-      (eval-defun nil)
-      (insert ":ensure t"))))
-;; Roam:1 ends here
-
-;; And, relax.
-
-;; [[file:../../notebook/docfiles/emacs/setup/org.org::*And, relax.][And, relax.:1]]
 (provide 'set-up-org)
-;; And, relax.:1 ends here

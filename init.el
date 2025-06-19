@@ -1,5 +1,5 @@
-;;; emacs.d/init-el -- chee rabbits emacs config
 ;;; -*- lexical-binding: t -*-
+;;; emacs.d/init-el -- chee rabbits emacs config
 ;;; Commentary:
 ;; none
 ;;; Code:
@@ -35,6 +35,7 @@
 (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
 
 (defun crm-indicator (args)
+  "?"
   (cons (concat "[CRM] " (car args)) (cdr args)))
 (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
 
@@ -105,10 +106,9 @@
 (elpaca `(,@elpaca-order))
 
 (elpaca elpaca-use-package
-  ;; Enable :ensure use-package keyword.
   (elpaca-use-package-mode)
-  ;; Assume :ensure nil unless otherwise specified.
   (setq elpaca-use-package-by-default nil))
+
 (elpaca-wait)
 (use-package async :ensure t)
 (defun chee/process-elpaca-queues nil
@@ -212,6 +212,8 @@
 ;;   '(undecorated-round . t))
 (add-to-list 'default-frame-alist
   '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
 
 (setq tab-always-indent 'complete)
 (setq ring-bell-function 'ignore)
@@ -223,7 +225,8 @@
 ;; theme
 ;; most theme packages are quite costly to load
 ;; this is nearly free
-(load-theme 'lychee t)
+;; (load-theme 'lychee t)
+(load-theme 'pale-rose t)
 
 ;; nevertheless,
 ;;(use-package gruvbox-theme :ensure t
@@ -281,6 +284,8 @@
 ;; My packages
 (defvar chee-directory (expand-file-name "chee" user-emacs-directory) "=^.^=")
 (add-to-list 'load-path chee-directory)
+
+(use-package cheebug)
 
 ;; Feline modeline
 (use-package feline
@@ -364,17 +369,6 @@
 ;; This used to be a mode (~chee-mode~) with a map, but i can't remember why i did that exactly?
 (put 'narrow-to-region 'disabled nil)
 (put 'narrow-to-defun 'disabled nil)
-;; ;; let's free up M-mouse-1
-;; (unbind-key "M-<mouse-1>")
-;; (unbind-key "M-<down-mouse-1>")
-;; (unbind-key "M-<drag-mouse-1>")
-;; ;; and mouse-three
-;; (unbind-key "M-<mouse-3>")
-;; (unbind-key "M-<down-mouse-3>")
-;; (unbind-key "M-<drag-mouse-3>")
-;; (unbind-key "<mouse-3>")
-;; (unbind-key "<down-mouse-3>")
-;; (unbind-key "<drag-mouse-3>")
 
 (add-hook 'emacs-lisp-mode-hook
   (lambda nil
@@ -382,18 +376,15 @@
 	  (setq-local indent-tabs-mode nil)
 	  (setq-local tab-width 2)))
 
-
 (setq mac-command-modifier 'super)
 (setq mac-option-modifier 'meta)
-;; who doesn't want more modifier keys!!
 (setq mac-right-option-modifier 'alt)
 (setq mac-right-command-modifier 'hyper)
-
 ;; this is fun but impractical, new Fn-somethings become hardcoded in the OS
 ;; every version or so
 (setq mac-function-modifier 'hyper)
 (setq vc-follow-symlinks t)
-
+;; todo move all these funcs elsewhere chee/text-operations.el or something
 (defun point-at-bol-or-indentation nil
   "Check if point is at bol or bol-ish."
   (let ((point (point)))
@@ -492,7 +483,8 @@ or with line as region."
 (defun chee/delete-horizontal-and-vertical-space nil
 	(interactive)
 	(call-interactively 'delete-horizontal-space)
-	(call-interactively 'delete-blank-lines))
+  (call-interactively 'delete-blank-lines))
+
 
 (bind-keys
   ("C-s-n" . make-frame)
@@ -513,9 +505,9 @@ or with line as region."
   ("C-$" . shell-command-filter-region)
   ("C-h F" . describe-face)
 
+
   ;; nice
   ("M-SPC" . execute-extended-command)
-
 
   ("A-q" . quoted-insert)
   ("H-<left>" . windmove-left)
@@ -534,6 +526,10 @@ or with line as region."
   ("s-F" . consult-ripgrep)
   ("s-q" . save-buffers-kill-terminal)
   ("s-s" . save-buffer)
+  ("s-w" . kill-current-buffer)
+  ("s-q" . (lambda nil (interactive)
+             (condition-case nil (delete-frame)
+               (error (save-buffers-kill-terminal)))))
 
   ("s-x" . chee/kill-region-or-word)
   ("s-{" . previous-buffer)
@@ -555,119 +551,10 @@ or with line as region."
   ("H-x H-x" . eval-defun)
   ("H-x H-e" . eval-last-sexp))
 
-;; (add-to-list 'auto-mode-alist '("\\.js\\'" . js-rabbit-mode))
-                                        ; (add-to-list 'auto-mode-alist '("\\.[tj]sx\\'" . tsx-ts-mode))
-;; cherries
-
-;; my personal website :)
-
-
-;; todo cherries mode
-(defvar cherries-directory "~/web/chee.party/")
-(defun cherries/number-within-range? (number range)
-  (and (>= number (car range)) (<= number (cdr range))))
-
-(defvar cherries/emoji-ranges
-  '((9984 . 10175)
-	   (126976 . 127023)
-	   (127136 . 127231)
-	   (127248 . 127386)
-	   (127462 . 129479)))
-
-(defun cherries/emoji? (char)
-  (seq-some
-	  (lambda (range)
-		  (cherries/number-within-range? char range))
-	  cherries/emoji-ranges))
-
-(defun cherries/emoji-name-or-identity (char)
-  "Return emoji name if CHAR is emoji, otherwise return CHAR."
-  (if (cherries/emoji? char)
-		(get-char-code-property char 'name)
-	  (char-to-string char)))
-
-(defun cherries/replace-emojis-with-names-in-string  (string)
-  "Return a string that is STRING with emojis replaced by their names."
-  (mapconcat 'cherries/emoji-name-or-identity (string-to-list string) ""))
-
-
-(defun cherries/slugify (headline)
-  "Create a slug from a title string."
-  (replace-regexp-in-string
-	  "-$" ""
-	  (replace-regexp-in-string
-		  "-+" "-"
-		  (replace-regexp-in-string
-		    "-:[:a-z0-9]+:$" ""
-		    (replace-regexp-in-string
-			    "[^a-z0-9+=~@]" "-"
-			    (downcase
-			      (cherries/replace-emojis-with-names-in-string headline)))))))
-
-(defun cherries/title-to-filename (title &optional ext)
-  (concat (cherries/slugify title) "." (or ext "md")))
-
-(defun cherries/title-to-entry-path (title &optional ext)
-  (expand-file-name
-	  (concat
-	    "documents/entries/"
-	    (cherries/title-to-filename title ext))
-	  cherries-directory))
-
-(defun cherries/entry ()
-  (interactive)
-  (let ((title (read-string "title? ")))
-	  (find-file (cherries/title-to-entry-path title))))
-
-(defun cherries/weekly ()
-  (interactive)
-  (project-switch-project cherries-directory)
-  (cd cherries-directory)
-  (find-file (shell-command-to-string "npm run -s weekly"))
-  (end-of-buffer)
-  (insert "
-"))
-
-(defun cherries/note ()
-  (interactive)
-  (find-file
-    (expand-file-name
-	    (concat
-	      "documents/entries/"
-	      (format-time-string "%Y-"))
-	    cherries-directory)))
-
-(defun cherries/date ()
-  (interactive)
-  (insert "date: " (format-time-string "%FT%TZ")))
-
-(defun rename-visited-md-to-txt ()
-  (interactive)
-  (rename-visited-file
-    (replace-regexp-in-string "\\.md" ".txt" (buffer-file-name))))
-
-(defun fill-whole-buffer ()
-  (interactive)
-  (fill-region (point-min) (point-max)))
-
-(defun cherries/delete-wp-tags ()
-  (interactive)
-  (delete-matching-lines "tags\\|magicktitle\\|- \"wp\"\\|title:\\|^$"))
-
-(defun cherries/migrate-wp-post ()
-  (interactive)
-  (goto-char (point-min))
-  (cherries/delete-wp-tags)
-  (fill-whole-buffer)
-  (rename-visited-md-to-txt)
-  (save-buffer))
-;; cherries:1 ends here
+(use-package cherries)
 
 ;; Panelize
-
 ;; Make a window sticky
-
-;; [[file:../notebook/docfiles/emacs/emacs.org::*Panelize][Panelize:1]]
 (defun panelize-window (&optional window)
   "Tell WINDOW to behave like a panel.
 
@@ -700,45 +587,12 @@ It will no longer be dedicated, and it will close when
   ("C-h k" . #'helpful-key)
   ("C-h x" . #'helpful-command)
   ("C-h F" . #'helpful-function))
-;; Helpful:1 ends here
 
 ;; move-text
 (use-package move-text :ensure t
   :bind
-  ("C-S-<up>" . move-text-up)
-  ("C-S-<down>" . move-text-down))
-
-(use-package treemacs :ensure t
-  :bind ("s-\\" . treemacs)
-  :custom-face
-  :config
-  (setq
-    treemacs-width 24
-    treemacs-wide-toggle-width 64
-    treemacs--width-is-locked nil)
-  (treemacs-follow-mode t)
-  (treemacs-resize-icons 22)
-  (treemacs-filewatch-mode t)
-  (treemacs-fringe-indicator-mode 'always)
-
-  (when treemacs-python-executable
-    (treemacs-git-commit-diff-mode t))
-  (pcase (cons (not (null (executable-find "git")))
-	         (not (null treemacs-python-executable)))
-    (`(t . t)
-      (treemacs-git-mode 'deferred))
-    (`(t . _)
-      (treemacs-git-mode 'simple)))
-  (add-hook 'treemacs-mode-hook
-    (lambda nil
-      (treemacs-project-follow-mode t)))
-  (use-package treemacs-icons-dired
-    :hook (dired-mode . treemacs-icons-dired-enable-once)
-    :ensure t)
-  (use-package treemacs-all-the-icons :ensure t
-    :config
-    (treemacs-load-theme "all-the-icons")))
-;; treemacs:1 ends here
+  ("M-<up>" . move-text-up)
+  ("M-<down>" . move-text-down))
 
 ;; solaire
 (use-package solaire-mode :ensure t
@@ -826,16 +680,16 @@ pick an inflection any inflection:
   :config
   (bind-keys
     :prefix-map +avy-prefix-map
-    :prefix "s-."
-    ("s-." . avy-goto-char)
-    ("s-/" . avy-next)
-    ("s-," . avy-prev)
-    ("s-l" . avy-resume)
+    :prefix "H-."
+    ("H-." . avy-goto-char)
+    ("H-/" . avy-next)
+    ("H-," . avy-prev)
+    ("H-l" . avy-resume)
     ("w" . avy-goto-word-0)
-    ("s-w" . avy-goto-word-1)
-    ("s w" . avy-goto-subword-0)
-    ("s-s s-w" . avy-goto-subword-1)
-    ("s-;" . avy-pop-mark)))
+    ("H-w" . avy-goto-word-1)
+    ("H w" . avy-goto-subword-0)
+    ("H-s s-w" . avy-goto-subword-1)
+    ("H-;" . avy-pop-mark)))
 
 ;; Common Lisp
 (use-package set-up-common-lisp :ensure nil)
@@ -856,59 +710,8 @@ pick an inflection any inflection:
 ;; Developer Documentation
 ;; This is nice, like Dash.app in Emacs. Will I remember I have it? It doesn't have common lisp docs. RIP.
 (use-package devdocs :ensure t)
+(use-package +emoji)
 
-(defgroup +emoji nil
-  "We get emoji."
-  :group 'ui)
-
-(defcustom +emoji/fontname
-  "Apple Color Emoji"
-  "The emoji to use for the emoji block.  Pick something with nice animals."
-  :type 'string
-  :group '+emoji)
-
-;; iosevka is the default because it has the wonderful legacy computing block,
-;; starring LEFT HALF RUNNING MAN 🮲🮳
-(defcustom +emoji/fallback-fontname
-  "Iosevka"
-  "The emoji to use as the fallback font.  Pick something with LEFT HALF RUNNING MAN."
-  :type 'string
-  :group '+emoji)
-
-(defconst +emoji/ranges
-  '((#x2620 . #x263f) ; some other things
-	   (#x2700 . #x27bf) ; dingbats
-	   (#x1f000 . #x1f02f) ; mahjong
-	   (#x1f0a0 . #x1f19b) ; cards and more
-	   ;; and just about everything else. big dingbat energy
-	   (#x1f1e6 . #x1fad7))
-  "These ranges were handcrafted.  They might be wrong.")
-
-(defun +emoji/register-font-for-range (font-name &optional range)
-  "Set FONT-NAME as the fontset font for unicode codepoint RANGE."
-  (set-fontset-font "fontset-default"
-		range
-		(font-spec
-			:name (format "%s:" font-name)
-			:registry "iso10646-1")))
-
-(defun +emoji/register-fallback nil
-  "Use `+emoji/fallback-fontname' as the fallback font."
-  (+emoji/register-font-for-range +emoji/fallback-fontname))
-
-(defun +emoji/register (range)
-  "Use `+emoji/fontname' to cover unicode codepoint RANGE."
-  (+emoji/register-font-for-range +emoji/fontname range))
-
-(defun +emoji/lets-effing-go nil
-  "Enable the emoji."
-  (interactive)
-  (+emoji/register-fallback)
-  (mapc '+emoji/register +emoji/ranges))
-
-(when (display-graphic-p)
-  (+emoji/lets-effing-go))
-;; Unicode fonts 🮲🮳:3 ends here
 
 ;; line numbers
 ;; - in programming modes only
@@ -1030,68 +833,7 @@ pick an inflection any inflection:
 	          (equal web-mode-engine "vue"))
 	    (setq web-mode-script-padding 0))))
 
-(use-package jsonrpc :ensure t)
-(use-package flymake :ensure t)
-(use-package eglot :ensure t
-  :after flymake
-  :hook
-  (shell-script-mode . eglot-ensure)
-  (python-mode . eglot-ensure)
-  (ruby-mode . eglot-ensure)
-  (sass-mode . eglot-ensure)
-  (scss-mode . eglot-ensure)
-  (rust-mode . eglot-ensure)
-  (perl-mode . eglot-ensure)
-  (swift-mode . eglot-ensure)
-  (shell-script-mode . eglot-ensure)
-  (typescript-mode . eglot-ensure)
-  (deno-ts-mode . eglot-ensure)
-  (js-mode . eglot-ensure)
-  (js-jsx-mode . eglot-ensure)
-  (js-ts-mode . eglot-ensure)
-  (typescript-ts-mode . eglot-ensure)
-  (tsx-ts-mode . eglot-ensure)
-  (zig-mode . eglot-ensure)
-  (go-mode . eglot-ensure)
-  (go-ts-mode . eglot-ensure)
-  (python-ts-mode . eglot-ensure)
-  (tsx-ts-mode . eglot-ensure)
-  (clojure-mode . eglot-ensure)
-  (clojurescript-mode . eglot-ensure)
-  (clojurec-mode . eglot-ensure)
-  (web-mode . eglot-ensure)
-  (css-ts-mode . eglot-ensure)
-  (css-mode . eglot-ensure)
-  (json-ts-mode . eglot-ensure)
-  (json-mode . eglot-ensure)
-  (markdown-mode . eglot-ensure)
-  (shell-mode . eglot-ensure)
-  (c++-mode . eglot-ensure)
-  (c-mode . eglot-ensure)
-  (zig-mode . eglot-ensure)
-  :config
-
-  (bind-key "s-l r r" #'eglot-rename eglot-mode-map)
-
-  (advice-add 'eglot-completion-at-point :around #'cape-wrap-buster)
-  (advice-add 'eglot-completion-at-point :around #'cape-wrap-noninterruptible)
-  ;; (add-to-list 'eglot-server-programs
-  ;;   '(web-mode "vscode-html-language-server" "--stdio"))
-  (add-to-list 'eglot-server-programs
-    '(json-ts-mode "vscode-json-language-server" "--stdio"))
-  (defun +eglot/lets-go nil
-    ;; we dont need this pretty debug output rn
-    (fset #'jsonrpc--log-event #'ignore)
-    ;; i want a massive garbage hole
-	  (setq-local gcmh-high-cons-threshold
-		  (* 2 (default-value 'gcmh-high-cons-threshold))))
-  (add-hook 'eglot-managed-mode-hook '+eglot/lets-go)
-  (setq completion-category-overrides '((eglot (styles orderless))))
-  (setq completion-category-defaults nil))
-
-(use-package flycheck-eglot :ensure t :after (flycheck eglot flymake)
-  :config
-  (global-flycheck-eglot-mode 1))
+(use-package set-up-ide)
 
 ;; nginx
 (use-package nginx-mode :ensure t
@@ -1176,7 +918,6 @@ pick an inflection any inflection:
   (apheleia-global-mode +1)
   :after tramp)
 
-
 ;; restart-emacs
 (use-package restart-emacs
   :ensure t
@@ -1220,8 +961,8 @@ pick an inflection any inflection:
 	  ("C-." . chee/puni-rewrap-sexp)
 	  ("C-M-t" . puni-transpose)
 	  ("C-s-<up>" . puni-raise)
-	  ("s-<up>" . puni-splice-killing-backward)
-	  ("s-<down>" . puni-splice-killing-forward)
+	  ("C-s-<left>" . puni-splice-killing-backward)
+	  ("C-s-<right>" . puni-splice-killing-forward)
 	  ("s-<backspace>" . puni-force-delete)
 	  ("s-<kp-delete>" . puni-splice-killing-forward)
 
@@ -1246,8 +987,8 @@ pick an inflection any inflection:
 	  ("M-(" . puni-barf-backward)
 	  ("C-)" . puni-slurp-forward)
 	  ("M-)" . puni-barf-forward)
-	  ("M-<up>" . puni-beginning-of-sexp)
-	  ("M-<down>" . puni-end-of-sexp))
+	  ("M-C-<up>" . puni-beginning-of-sexp)
+	  ("M-C-<down>" . puni-end-of-sexp))
   :config
   (unbind-key "C-S-k" puni-mode-map))
 ;; puni:1 ends here
@@ -1292,12 +1033,19 @@ pick an inflection any inflection:
   (tramp-auto-save-directory (locate-user-emacs-file "tramp-save/"))
   (tramp-chunksize 2048)
   (tramp-default-method "sshx" "not scp! also use /bin/sh too"))
-;; tramp:1 ends here
 
-(use-package deno-ts-mode :ensure t)
 (use-package coverlay :ensure t)
 (use-package css-in-js-mode
   :ensure (:host github :repo "orzechowskid/tree-sitter-css-in-js"))
+
+(use-package treesit-auto
+  :ensure t
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
+
 
 ;; undo tree
 (use-package undo-tree
@@ -1318,44 +1066,13 @@ pick an inflection any inflection:
   :bind
   (("C-s-z" . 'vundo)))
 
-;; eat
-(use-package eat
-  :ensure (:type git
-	          :host codeberg
-	          :repo "akib/emacs-eat"
-	          :files ("*.el" ("term" "term/*.el") "*.texi"
-		                 "*.ti" ("terminfo/e" "terminfo/e/*")
-		                 ("terminfo/65" "terminfo/65/*")
-		                 ("integration" "integration/*")
-		                 (:exclude ".dir-locals.el" "*-tests.el")))
+(use-package set-up-eat)
+
+(use-package ansi-color
   :config
-  (add-to-list
-	  'display-buffer-alist
-	  '((lambda (buffer-or-name _)
-		    (let ((buffer (get-buffer buffer-or-name)) (project-current (project-current)))
-		      (with-current-buffer buffer
-			      (or (equal major-mode 'eat-mode)
-				      (and project-current (string= (string-join
-					                                    (list "*"
-						                                    (project-name project-current) "-eat*"))
-				                             (buffer-name buffer)))))))
-	     (display-buffer-reuse-window
-		     display-buffer-at-bottom)
-	     (direction . bottom)
-	     (inhibit-switch-frame. t)
-	     (window-height . 0.35)))
-  (defun 🐰eat-other-window nil
+  (defun display-ansi-colors ()
     (interactive)
-    (if (project-current)
-      (eat-project-other-window)
-      (eat-other-window)))
-  :bind ("s-j" . 🐰eat-other-window)
-  (:map eat-mode-map
-		("C-c C-x" . vterm-send-C-x)
-		("C-c M-x" . vterm-send-C-x)
-		("s-v" . eat-yank)
-		("s-c" . kill-ring-save)
-    ("s-j" . delete-window)))
+    (ansi-color-apply-on-region (point-min) (point-max))))
 
 ;; which key
 (use-package which-key
@@ -1364,7 +1081,7 @@ pick an inflection any inflection:
   :config
   (defun chee/which-key-delay (seq len)
 	  "Delay certain sequences a little.
-Reason: it's distracting when pressing C-x C-s to see a popup because it happens automatically 100 times a minute."
+                Reason: it's distracting when pressing C-x C-s to see a popup because it happens automatically 100 times a minute."
 	  (when (member seq '("C-x")) 0.5))
   (add-to-list 'which-key-delay-functions 'chee/which-key-delay)
   :custom (which-key-mode t) (which-key-idle-delay 0.01))

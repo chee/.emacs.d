@@ -104,7 +104,7 @@
     ("s-e" . embark-export)))
 (use-package embark-consult :ensure t)
 ;; (use-package marginalia :ensure t
-  ;; :config (marginalia-mode t))
+;; :config (marginalia-mode t))
 (use-package wgrep :ensure t)
 
 (use-package savehist
@@ -130,11 +130,11 @@
 (use-package corfu
   :ensure t
   :bind (:map corfu-map
-              ("RET" . corfu-insert))
+          ("RET" . corfu-insert))
   :config
 
   (defun corfu-insert (arg)
-      "Insert current candidate.
+    "Insert current candidate.
 Quit (and insert newline) if no candidate is selected."
     (interactive "P")
     (if (>= corfu--index 0)
@@ -148,8 +148,8 @@ Quit (and insert newline) if no candidate is selected."
     (use-package corfu-terminal
       :if (not (display-graphic-p))
       :ensure '(corfu-terminal
-                :type git
-                :repo "https://codeberg.org/akib/emacs-corfu-terminal.git")
+                 :type git
+                 :repo "https://codeberg.org/akib/emacs-corfu-terminal.git")
       :config (corfu-terminal-mode +1)))
   :custom
   (corfu-preview-current nil)
@@ -173,39 +173,39 @@ Quit (and insert newline) if no candidate is selected."
 
 ;; [[file:../../notebook/docfiles/emacs/setup/completions-vertico-consult-corfu-cape.org::*cape][cape:1]]
 (use-package cape
-	 :ensure t
-	 :bind (
-		:prefix-map chee/cape
-		:prefix "s-l"
-		("p" . completion-at-point)
-		("t" . complete-tag)
-		("d" . cape-dabbrev)
-		("h" . cape-history)
-		("f" . cape-file)
-		("k" . cape-keyword)
-		("s" . cape-symbol)
-		("a" . cape-abbrev)
-		("i" . cape-ispell)
-		("l" . cape-line)
-		("w" . cape-dict)
-		("\\" . cape-tex)
-		("_" . cape-tex)
-		("^" . cape-tex)
-		("&" . cape-sgml)
-		("r" . cape-rfc1345))
-	 :init
-	 ;;(add-to-list 'completion-at-point-functions #'cape-dabbrev)
-	 ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
-	 ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-	 ;; (add-to-list 'completion-at-point-functions #'cape-history)
-	 ;; (add-to-list 'completion-at-point-functions #'cape-line)
-	 ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
-	 ;;(add-to-list 'completion-at-point-functions #'cape-tex)
-	 ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
-	 ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-	 ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
-	 ;;(add-to-list 'completion-at-point-functions #'cape-ispell)
-	 (add-to-list 'completion-at-point-functions #'cape-file))
+	:ensure t
+	:bind (
+		      :prefix-map chee/cape
+		      :prefix "C-c C-l"
+		      ("p" . completion-at-point)
+		      ("t" . complete-tag)
+		      ("d" . cape-dabbrev)
+		      ("h" . cape-history)
+		      ("f" . cape-file)
+		      ("k" . cape-keyword)
+		      ("s" . cape-symbol)
+		      ("a" . cape-abbrev)
+		      ("i" . cape-ispell)
+		      ("l" . cape-line)
+		      ("w" . cape-dict)
+		      ("\\" . cape-tex)
+		      ("_" . cape-tex)
+		      ("^" . cape-tex)
+		      ("&" . cape-sgml)
+		      ("r" . cape-rfc1345))
+	:init
+	;;(add-to-list 'completion-at-point-functions #'cape-dabbrev)
+	;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+	;;(add-to-list 'completion-at-point-functions #'cape-dict)
+	;; (add-to-list 'completion-at-point-functions #'cape-history)
+	;; (add-to-list 'completion-at-point-functions #'cape-line)
+	;;(add-to-list 'completion-at-point-functions #'cape-keyword)
+	;;(add-to-list 'completion-at-point-functions #'cape-tex)
+	;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+	;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+	;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+	;;(add-to-list 'completion-at-point-functions #'cape-ispell)
+	(add-to-list 'completion-at-point-functions #'cape-file))
 ;; cape:1 ends here
 
 ;; Provider

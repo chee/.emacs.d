@@ -129,7 +129,6 @@ GRTAGS
 GPATH
 
 # Miscellaneous
-.mc-lists.el
 smex-items
 ido.last
 .emacs.desktop
