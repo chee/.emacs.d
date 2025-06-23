@@ -180,3 +180,4 @@ quelpa-melpa-cache
 
 flycheck_*.el
 /projects
+.chatgpt-shell.el
