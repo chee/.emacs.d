@@ -21,7 +21,6 @@
 (setq initial-major-mode 'emacs-lisp-mode)
 (setq initial-scratch-message " ")
 
-
 (setq read-process-output-max (* 1024 1024))
 
 ;; thanks to doom for some of these ideas
@@ -34,8 +33,7 @@
 	'(read-only t cursor-intangible t face minibuffer-prompt))
 (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
 
-(defun crm-indicator (args)
-  "?"
+(defun crm-indicator (args)  "?"
   (cons (concat "[CRM] " (car args)) (cdr args)))
 (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
 
@@ -156,7 +154,7 @@
 ;; - Quote: No
 (electric-indent-mode t)
 (electric-layout-mode -1)
-(electric-pair-mode -1)
+(electric-pair-mode 1)
 (setf electric-pair-inhibit-predicate
   (lambda (_)
     (or (minibufferp))))
@@ -177,15 +175,15 @@
 ;; scrolling on a window should scroll that window, even if ffm is off
 (setq mouse-wheel-follow-mouse t)
 ;; think in pixels not in chars
-(if (fboundp 'pixel-scroll-precision-mode)
+(if (and (not mac-initialized)
+      (fboundp 'pixel-scroll-precision-mode))
   (pixel-scroll-precision-mode 1))
 (setf frame-resize-pixelwise t)
 (setf window-resize-pixelwise t)
 ;; click on links in (almost) every buffer
-(global-goto-address-mode t)
+;; (global-goto-address-mode nil)
 (if (fboundp 'goto-address-at-mouse)
-  (bind-key "H-<mouse-1>" #'goto-address-at-mouse)
-  (add-hook 'xwidget-webkit-mode-hook (lambda nil (goto-address-mode -1))))
+  (bind-key "M-s-<mouse-1>" #'goto-address-at-mouse))
 ;; (setq scroll-preserve-screen-position 'always)
 
 ;; Focus follows 🐭
@@ -198,7 +196,7 @@
 
 ;; the menubar doesn't take up room on a mac, it's the global top bar
 (unless (equal system-type 'darwin)
-  (menu-bar-mode 1))
+  (menu-bar-mode -1))
 
 ;; be small and thin when you are guific
 (when (display-graphic-p)
@@ -212,7 +210,12 @@
 ;;   '(undecorated-round . t))
 (add-to-list 'default-frame-alist
   '(ns-transparent-titlebar . t))
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+(add-to-list 'default-frame-alist '(fullscreen . nil))
+(add-to-list 'default-frame-alist '(height . 100))
+(add-to-list 'default-frame-alist '(width . 200))
+(add-to-list 'default-frame-alist '(top . 0))
+(add-to-list 'default-frame-alist '(left . 0))
+
 
 
 (setq tab-always-indent 'complete)
@@ -246,6 +249,8 @@
 
 (defun +font-family (&rest names)
   (seq-find #'+font-available-p names))
+
+(set-face-background 'child-frame-border "hotpink")
 
 (if (display-graphic-p)
   ;; a nice font for editing and codeblocks
@@ -312,7 +317,8 @@
 (add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p)
 ;; say yes, briefly
 (defalias 'yes-or-no-p 'y-or-n-p)
-(defun noop nil (interactive))
+(defun noot nil "Just say yes" t)
+(defun noop nil "Just say nil" (interactive))
 
 (setq lisp-indent-function 'common-lisp-indent-function)
 (setq-default lisp-indent-offset 2)
@@ -378,11 +384,11 @@
 
 (setq mac-command-modifier 'super)
 (setq mac-option-modifier 'meta)
-(setq mac-right-option-modifier 'alt)
-(setq mac-right-command-modifier 'hyper)
+(setq mac-right-option-modifier nil)
+(setq mac-right-command-modifier 'meta)
 ;; this is fun but impractical, new Fn-somethings become hardcoded in the OS
 ;; every version or so
-(setq mac-function-modifier 'hyper)
+;; (setq mac-function-modifier 'hyper)
 (setq vc-follow-symlinks t)
 ;; todo move all these funcs elsewhere chee/text-operations.el or something
 (defun point-at-bol-or-indentation nil
@@ -443,27 +449,33 @@
 				(kill-region start end)
 				(kill-word (- arg))))))
 
+
+(defun chee/kill-region-or-line nil
+  (interactive)
+  (chee/with-region-or-line #'kill-region))
+
 (defun chee/comment-or-uncomment-region-or-line ()
 	(interactive)
 	(chee/with-region-or-line 'comment-or-uncomment-region))
 
 (defun chee/with-region-or-line (fn)
-	"Eval FN (which takes beginning and end), with region if active,
-or with line as region."
-	(let ((region-was-active (region-active-p)))
-		(if (region-active-p)
-			(progn
-				(funcall fn (region-beginning) (region-end))
-				(set-mark (region-end))
-				(goto-char (region-beginning)))
-			(funcall fn (line-beginning-position) (line-end-position)))))
+  "Eval FN (which takes beginning and end), with region if active,
+  or with line as region."
+  (let ((region-was-active (region-active-p)))
+    (if (region-active-p)
+      (progn
+        (let ((start (region-beginning)) (end (region-end)))
+          (funcall fn start end)
+          (set-mark end)
+          (goto-char start)))
+      (funcall fn (line-beginning-position) (+ 1 (line-end-position))))))
+
 
 (defun chee/indent-line-or-region nil
-	(interactive)
-	(let ((point (point)) (mark (mark)))
-		(chee/with-region-or-line 'indent-rigidly-right-to-tab-stop)
-		(set-mark mark)
-		(goto-char point)))
+  (interactive)
+  (let ((point (point)) (mark (mark)))
+    (save-excursion
+      (chee/with-region-or-line 'indent-rigidly-right-to-tab-stop))))
 
 (defun chee/unindent-line-or-region nil
 	(interactive)
@@ -510,10 +522,10 @@ or with line as region."
   ("M-SPC" . execute-extended-command)
 
   ("A-q" . quoted-insert)
-  ("H-<left>" . windmove-left)
-  ("H-<right>" . windmove-right)
-  ("H-<up>" . windmove-up)
-  ("H-<down>" . windmove-down)
+  ("M-s-<left>" . windmove-left)
+  ("M-s-<right>" . windmove-right)
+  ("M-s-<up>" . windmove-up)
+  ("M-s-<down>" . windmove-down)
   ("C-S-h" . windmove-left)
   ("C-S-j" . windmove-down)
   ("C-S-k" . windmove-up)
@@ -531,25 +543,21 @@ or with line as region."
              (condition-case nil (delete-frame)
                (error (save-buffers-kill-terminal)))))
 
-  ("s-x" . chee/kill-region-or-word)
+  ("s-x" . chee/kill-region-or-line)
   ("s-{" . previous-buffer)
   ("s-}" . next-buffer)
   ("s-[" . chee/unindent-line-or-region)
   ("s-]" . chee/indent-line-or-region)
   ("s-8" . insert-char)
+  ("s-v" . yank)
+
+  ("s-k" . delete-window)
 
   ("C-s-s" . query-replace)
   ("C-S-s-s". query-replace-regexp)
   ("C-S-s". isearch-forward-regexp)
 
-  ("H-s". isearch-forward)
-  ("H-S-s". isearch-forward-regexp)
-  ("H-r" . query-replace)
-  ("H-s-r". query-replace-regexp)
-
-  :map emacs-lisp-mode-map
-  ("H-x H-x" . eval-defun)
-  ("H-x H-e" . eval-last-sexp))
+  :map emacs-lisp-mode-map)
 
 (use-package cherries)
 
@@ -594,13 +602,18 @@ It will no longer be dedicated, and it will close when
   ("M-<up>" . move-text-up)
   ("M-<down>" . move-text-down))
 
+(defvar chee/solaire-disabled-buffer-names '("*scratch*"))
+
 ;; solaire
 (use-package solaire-mode :ensure t
   :config
   (solaire-global-mode +1)
+
   (defun solaire-mode-real-buffer-p ()
     "Return t if the current buffer is a real (file-visiting) buffer."
-    (or (bound-and-true-p org-src-mode)
+    (or
+      (seq-contains-p chee/solaire-disabled-buffer-names (buffer-name) #'string=)
+      (bound-and-true-p org-src-mode)
       (buffer-file-name (buffer-base-buffer))))
   :custom-face
   (treemacs-window-background-face ((t (:inherit solaire-default-face))))
@@ -697,6 +710,8 @@ pick an inflection any inflection:
 ;; Completions
 (use-package set-up-completions :ensure nil)
 
+(use-package set-up-puni :ensure nil)
+
 ;; Generic Files
 ;; add basic syntax highlighting for lots of files
 (use-package generic-x :ensure nil)
@@ -769,7 +784,13 @@ pick an inflection any inflection:
 	  'emacs-lisp-checkdoc))
 (use-package flycheck-pos-tip-mode
   :ensure flycheck-pos-tip
+
   :hook flycheck-mode)
+
+(use-package tooltip
+  :config
+  (setq tooltip-delay 0.2)
+  (setq tooltip-y-offset 5))
 
 ;; git
 (use-package git-modes :ensure t)
@@ -909,7 +930,34 @@ pick an inflection any inflection:
   (:map project-prefix-map
 		("t" . eat-project)
 		("v" . magit)
-		("s-p" . project-switch-project)))
+	  ("s-p" . project-switch-project)))
+
+(defun chee/open-settings ()
+  "Create or select the 'settings' frame and open the init file in it.
+If already in the settings frame, hide it."
+  (interactive)
+  (let ((settings-frame (seq-find (lambda (frame)
+                                    (string= (frame-parameter frame 'name) "settings"))
+                          (frame-list)))
+         (current-frame (selected-frame)))
+    (cond
+      ;; If we're already in the settings frame, hide it
+      ((and settings-frame (eq current-frame settings-frame))
+        (make-frame-invisible settings-frame))
+      ;; If settings frame exists but we're not in it, select and raise it
+      (settings-frame
+        (raise-frame settings-frame)
+        (select-frame settings-frame))
+      ;; If no settings frame exists, create one
+      (t
+        (let ((new-frame (make-frame '((name . "settings")
+                                        (fullscreen . nil)
+                                        (width . 0.5)
+                                        (height . 0.5)))))
+          (select-frame new-frame)
+          (find-file user-init-file))))))
+
+(bind-key "s-," #'chee/open-settings)
 
 ;; apheleia / formatting / prettier etc
 (use-package apheleia
@@ -931,67 +979,7 @@ pick an inflection any inflection:
   ;; this is gona, but scss mode uses it at the moment
   (setq flymake-allowed-file-name-masks nil))
 
-;; puni
-(defun chee/puni-unwrap-sexp (&optional open close)
-  (interactive)
-  (save-excursion
-	  (let* ((bounds (puni-bounds-of-sexp-around-point))
-			      (beg (+ (car bounds) 1))
-			      (end (- (cdr bounds) 1)))
-		  (puni-delete-region beg end 'kill)
-		  (puni-backward-delete-char)
-		  (if open (insert-char open))
-		  (yank)
-		  (if close (insert-char close)))))
-
-(defun chee/puni-rewrap-sexp nil
-  (interactive)
-  (let ((open (read-char "Opening character? "))
-	       (close (read-char "Closing character? ")))
-	  (chee/puni-unwrap-sexp open close)))
-
-(use-package puni :ensure t
-  :init (puni-global-mode t)
-  (add-hook 'term-mode-hook #'puni-disable-puni-mode)
-  :bind
-  (:map puni-mode-map
-    ("C-c C-<backspace>" . puni-force-delete)
-    ("S-<backspace>" . puni-force-delete)
-	  ("C-=" . chee/puni-unwrap-sexp)
-	  ("C-." . chee/puni-rewrap-sexp)
-	  ("C-M-t" . puni-transpose)
-	  ("C-s-<up>" . puni-raise)
-	  ("C-s-<left>" . puni-splice-killing-backward)
-	  ("C-s-<right>" . puni-splice-killing-forward)
-	  ("s-<backspace>" . puni-force-delete)
-	  ("s-<kp-delete>" . puni-splice-killing-forward)
-
-	  ("C-<left>" . puni-backward-sexp-or-up-list)
-	  ("C-<right>" . puni-forward-sexp-or-up-list)
-	  ("C-<up>" . (lambda nil (interactive)
-					        (puni-beginning-of-sexp)
-					        (forward-char -1)
-					        (puni-beginning-of-sexp)))
-	  ("C-<down>" . (lambda nil (interactive)
-				            (puni-end-of-sexp)
-				            (forward-char)
-				            (puni-end-of-sexp)))
-	  ("A-w" .
-	    (lambda nil
-		    (interactive)
-		    (kill-region
-		      (region-beginning)
-		      (region-end))))
-
-	  ("C-(" . puni-slurp-backward)
-	  ("M-(" . puni-barf-backward)
-	  ("C-)" . puni-slurp-forward)
-	  ("M-)" . puni-barf-forward)
-	  ("M-C-<up>" . puni-beginning-of-sexp)
-	  ("M-C-<down>" . puni-end-of-sexp))
-  :config
-  (unbind-key "C-S-k" puni-mode-map))
-;; puni:1 ends here
+(use-package set-up-puni)
 
 ;; licenses
 (use-package lice :ensure t)
@@ -1070,9 +1058,20 @@ pick an inflection any inflection:
 
 (use-package ansi-color
   :config
-  (defun display-ansi-colors ()
-    (interactive)
-    (ansi-color-apply-on-region (point-min) (point-max))))
+  (defun chee/apply-ansi-colors ()
+    "Apply ANSI color codes in the current buffer."
+    (ansi-color-apply-on-region (point-min) (point-max)))
+
+  (define-minor-mode chee/ansi-colors-mode
+    "Minor mode to automatically display ANSI colors."
+    :lighter " ANSICOLORS"
+    (when chee/ansi-colors-mode
+      (let ((inhibit-read-only t)
+             (buffer-read-only nil))
+        (chee/apply-ansi-colors)
+        (set-buffer-modified-p nil))))
+
+  (add-to-list 'auto-mode-alist '("\\.bench\\'" . (lambda () (chee/ansi-colors-mode 1)))))
 
 ;; which key
 (use-package which-key

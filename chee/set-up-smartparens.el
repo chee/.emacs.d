@@ -6,76 +6,65 @@
 
 
 ;; [[file:../../notebook/docfiles/emacs/setup/smartparens.org::+begin_src emacs-lisp :comments both :mkdirp yes :tangle ~/.emacs.d/chee/set-up-smartparens.el][No heading:1]]
-(defun /sp-org-in-src-block-p (_id _action _context)
-	 (org-in-src-block-p))
+;; (defun /sp-org-in-src-block-p (_id _action _context)
+;; (org-in-src-block-p))
 
-(defun /setup-smartparens-org-mode nil
-	 (use-package smartparens-org
-		:elpaca nil)
-	 (sp-with-modes 'org-mode
-		(sp-local-pair "\"" "\""
-			  :unless '(/sp-org-in-src-block-p))
-		(sp-local-pair "'" "'"
-			  :unless '(/sp-org-in-src-block-p))
-		(sp-local-pair "*" "*"
-			  :unless '(sp-point-after-word-p
-					 sp-point-at-bol-p
-					 /sp-org-in-src-block-p)
-			  :skip-match 'sp--org-skip-asterisk)
-		(sp-local-pair "_" "_"
-			  :unless '(sp-point-after-word-p
-					 /sp-org-in-src-block-p))
-		(sp-local-pair "/" "/"
-			  :unless '(sp-point-after-word-p
-					 sp-org-point-after-left-square-bracket-p
-					 /sp-org-in-src-block-p)
-			  :post-handlers '(("[d1]" "SPC")))
-		(sp-local-pair "~" "~"
-			  :unless '(sp-point-after-word-p
-					 /sp-org-in-src-block-p)
-			  :post-handlers '(("[d1]" "SPC")))
-		(sp-local-pair "=" "="
-			  :unless '(sp-point-after-word-p
-					 /sp-org-in-src-block-p)
-			  :post-handlers '(("[d1]" "SPC")))
-		(sp-local-pair "«" "»")))
+;; (defun /setup-smartparens-org-mode nil
+;; 	(use-package smartparens-org
+;; 		:elpaca nil)
+;; 	(sp-with-modes 'org-mode
+;; 		(sp-local-pair "\"" "\""
+;; 			:unless '(/sp-org-in-src-block-p))
+;; 		(sp-local-pair "'" "'"
+;; 			:unless '(/sp-org-in-src-block-p))
+;; 		(sp-local-pair "*" "*"
+;; 			:unless '(sp-point-after-word-p
+;; 					       sp-point-at-bol-p
+;; 					       /sp-org-in-src-block-p)
+;; 			:skip-match 'sp--org-skip-asterisk)
+;; 		(sp-local-pair "_" "_"
+;; 			:unless '(sp-point-after-word-p
+;; 					       /sp-org-in-src-block-p))
+;; 		(sp-local-pair "/" "/"
+;; 			:unless '(sp-point-after-word-p
+;; 					       sp-org-point-after-left-square-bracket-p
+;; 					       /sp-org-in-src-block-p)
+;; 			:post-handlers '(("[d1]" "SPC")))
+;; 		(sp-local-pair "~" "~"
+;; 			:unless '(sp-point-after-word-p
+;; 					       /sp-org-in-src-block-p)
+;; 			:post-handlers '(("[d1]" "SPC")))
+;; 		(sp-local-pair "=" "="
+;; 			:unless '(sp-point-after-word-p
+;; 					       /sp-org-in-src-block-p)
+;; 			:post-handlers '(("[d1]" "SPC")))
+;; 		(sp-local-pair "«" "»")))
 ;; No heading:1 ends here
 
 ;; [[file:../../notebook/docfiles/emacs/setup/smartparens.org::+begin_src emacs-lisp :comments both :mkdirp yes :tangle ~/.emacs.d/chee/set-up-smartparens.el][No heading:2]]
 (use-package smartparens
-	 :elpaca t
-	 :hook
-	 (text-mode . smartparens-mode)
-	 (prog-mode . smartparens-strict-mode)
-	 :bind (:map smartparens-mode-map ("C-." . sp-rewrap-sexp)
-			  ("C-<left>" . sp-beginning-of-previous-sexp)
-			  ("C-<down>" . sp-end-of-next-sexp)
-			  ("C-<" . sp-backward-sexp)
-			  ("C->" . sp-forward-sexp)
-			  ("C-<up>" . sp-up-sexp)
-			  ("C-<right>" . sp-down-sexp)
-			  ("A-w" . (lambda nil
-				(interactive)
-				(kill-region (region-beginning) (region-end))))
-			  ("A-," . sp-select-previous-thing)
-			  ("A-." . sp-select-next-thing)
-			  ("<A-tab>" . sp-indent-defun)
-			  ("H-." . sp-select-next-thing)
-			  ("C-." . sp-rewrap-sexp)
-			  ("C-=" . sp-unwrap-sexp)
-			  ("C-(" . sp-backward-slurp-sexp)
-			  ("M-(" . sp-backward-barf-sexp)
-			  ("C-)" . sp-forward-slurp-sexp)
-			  ("M-)" . sp-forward-barf-sexp)
-			  ("M-<up>" . sp-beginning-of-sexp)
-			  ("M-<down>" . sp-end-of-sexp)
-			  ("<home>" . sp-backward-up-sexp)
-			  ("<end>" . sp-forward-down-sexp))
-	 :config
-	 (use-package smartparens-config
-		:elpaca nil)
-	 (add-hook 'org-mode-hook '/setup-smartparens-org-mode))
+	:ensure t
+	:hook
+	(text-mode . smartparens-mode)
+	(prog-mode . smartparens-strict-mode)
+	:bind (:map smartparens-mode-map ("C-." . sp-rewrap-sexp)
+			    ("C-<" . sp-backward-sexp)
+			    ("C->" . sp-forward-sexp)
+			    ("A-," . sp-select-previous-thing)
+			    ("A-." . sp-select-next-thing)
+			    ("<A-tab>" . sp-indent-defun)
+			    ("C-." . sp-rewrap-sexp)
+			    ("C-=" . sp-unwrap-sexp)
+          ("C-s-t" . sp-transpose-sexp)
+			    ("H-." . sp-select-next-thing)
+			    ("C-(" . sp-backward-slurp-sexp)
+			    ("M-(" . sp-backward-barf-sexp)
+			    ("C-)" . sp-forward-slurp-sexp)
+			    ("M-)" . sp-forward-barf-sexp)
+			    ("s-<up>" . sp-beginning-of-sexp)
+			    ("s-<down>" . sp-end-of-sexp)))
 
+(unbind-key "M-<down>" smartparens-mode-map)
 
 (provide 'set-up-smartparens)
 ;; No heading:2 ends here

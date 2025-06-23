@@ -117,7 +117,7 @@
 	  ;; functions there
 	  :map org-mode-map
 	  ("<drag-mouse-3>" . (lambda nil t))
-	  ("H-<" . interupt-src-block)
+	  ("M-s-<" . interupt-src-block)
 	  ("C-c C-s" . interupt-src-block)
 	  ("C-c C-i" . interupt-src-block)
 	  ("C-c C-'" . org-edit-special)
@@ -411,7 +411,27 @@
 				"DONE(d!)")
 			 (type "STUCK(s@)" "|" "PLANNED(p@)" "DELEGATED(>@)" "CANCELLED(c@)")))
 
-
+  (custom-set-faces
+	  '(org-default ((t (:inherit variable-pitch))))
+	  '(org-document-title ((t (:height 1.60 :weight semibold))))
+	  '(org-document-info-keyword ((t (:height 0.8 :slant italic :inherit fixed-pitch))))
+	  '(org-list-dt ((t (:weight semibold :height 1.0))))
+	  '(org-checkbox ((t (:height 1.0))))
+	  '(outline-1 ((t (:height 1.2 :weight normal))))
+	  '(outline-2 ((t (:height 1.18 :weight normal))))
+	  '(outline-3 ((t (:height 1.16 :weight normal))))
+	  '(outline-4 ((t (:height 1.14 :weight normal))))
+	  '(outline-5 ((t (:height 1.12 :weight normal))))
+	  '(outline-6 ((t (:height 1.1 :weight semibold))))
+	  '(outline-7 ((t (:height 1.05 :weight semibold))))
+	  '(outline-8 ((t (:height 1.02 :weight semibold))))
+	  '(org-todo ((t (:weight semibold))))
+	  '(org-done ((t (:weight semibold))))
+	  '(org-headline-todo ((t (:weight regular))))
+	  '(org-headline-done ((t (:weight regular))))
+	  '(org-code ((t (:inherit fixed-pitch))))
+	  '(org-block ((t (:inherit fixed-pitch))))
+	  '(org-table ((t (:inherit fixed-pitch)))))
 	(setf org-use-fast-todo-selection 'expert)
 	(setf org-directory *notebook-directory*)
 	(setf org-html-html5-fancy t)

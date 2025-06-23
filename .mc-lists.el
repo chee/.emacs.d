@@ -6,16 +6,27 @@
       '(
          avy-goto-char
          chee/back-to-indentation-or-beginning
+         delete-window
+         electric-pair-delete-pair
+         lsp-execute-code-action
          puni-backward-delete-char
          puni-backward-kill-word
          puni-forward-delete-char
          puni-forward-kill-word
          puni-kill-line
+         puni-slurp-forward
+         sp-backward-delete-char
+         sp-delete-char
          ))
 
 (setq mc/cmds-to-run-once
       '(
+         handle-select-window
          handle-switch-frame
+         ignore-preserving-kill-region
          lsp-ui-doc--handle-mouse-movement
+         mac-mwheel-scroll
+         mark-whole-buffer
          pixel-scroll-precision
+         previous-buffer
          ))

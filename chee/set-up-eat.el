@@ -180,7 +180,7 @@
 (setq tab-line-close-button-show nil)
 (setq tab-line-separator "")
 (custom-set-faces
-  '(tab-line ((t (:background "white" :foreground "black" :height 1 :box nil :padding 0))))
+  '(tab-line ((t (:background "white" :foreground "black" :height 1.0 :box nil :padding 0))))
   '(tab-line-tab ((t (:background "black" :foreground "white" :box nil :padding 0))))
   '(tab-line-tab-current ((t (:background "black" :foreground "white"  :box nil :padding 0))))
   '(tab-line-tab-inactive ((t (:background "white" :foreground "black"  :box nil :padding 0))))

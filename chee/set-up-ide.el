@@ -37,17 +37,33 @@
   "Set the appropriate vars for Deno"
   (setq-local lsp-disabled-clients '(ts-ls))
   (cheebug "Activating Deno.")
+  (lsp-register-custom-settings
+    '(("deno.enable" t t)
+       ("deno.lint" t t)))
+  (cl-defmethod lsp-execute-command (_server (command (eql "deno.client.test")) arguments)
+    "Handle deno.client.test command."
+    (let* ((uri (aref arguments 0))
+            (test-name (aref arguments 1))
+            (options (aref arguments 2))
+            (file-path (lsp--uri-to-path uri))
+            (inspect (and options (gethash "inspect" options)))
+            (cmd (if inspect
+                   (format "deno test --inspect-brk --filter=\"%s\" \"%s\"" test-name file-path)
+                   (format "deno test --filter=\"%s\" \"%s\"" test-name file-path))))
+      (message "Running: %s" cmd)
+      (compile cmd)))
   (let ((formatter
           (pcase major-mode
             ('js-mode 'denofmt-js)
             ('typescript-ts-mode 'denofmt-ts)
+            ('typescript-mode 'denofmt-ts)
             ('tsx-ts-mode 'denofmt-tsx)
             ('json-ts-mode 'denofmt-json)
             ('markdown-mode 'denofmt-md))))
     (when formatter (setq-local apheleia-formatter formatter))))
 
 
-(defun chee/configure-code-tools ()
+(defun chee/configure-code-tools (&rest args)
   "Setup appropriate LSP server for TypeScript based on project type."
   (let ((result (chee/find-containing-deno-config)))
     (if result
@@ -63,9 +79,14 @@
 
   (setq lsp-keymap-prefix "s-l")
   (setq lsp-semantic-tokens-enable t)
-  (setq lsp-copilot-enabled t)
+  (setq lsp-copilot-enabled nil)
   (setq lsp-lens-enable t)
+  (setq lsp-modeline-diagnostics-enable t)
+  (setq lsp-ui-doc-max-width 60)
+  (setq lsp-ui-doc-border "black")
+  (setq lsp-auto-execute-action nil)
   (setq lsp-json-schemas
+
     `[(:fileMatch ["*.css-data.json"]
         :url "https://raw.githubusercontent.com/Microsoft/vscode-css-languageservice/master/docs/customData.schema.json")
        (:fileMatch ["package.json"]
@@ -130,4 +151,130 @@
 
 (use-package lsp-ui :commands lsp-ui-mode :ensure t)
 
+(use-package typescript-mode :ensure t
+  :bind (:map typescript-mode-map ("C-c C-e" . deno-run-test-at-point)))
+
+
 (use-package dap-mode :ensure t)
+
+
+(defun deno-run-test-at-point ()
+  "Run the Deno test at point and show output in a popup."
+  (interactive)
+  (bind-key "C-c C-e" 'deno-run-test-at-point 'typescript-ts-mode-map)
+  (let* ((file (buffer-file-name))
+          (test-name (deno--get-test-name-at-point))
+          (cmd (if test-name
+                 (format "deno test --filter=\"%s\" \"%s\" --no-check" test-name file)
+                 (format "deno test \"%s\" --no-check" file))))
+    (deno--run-and-show-output cmd)))
+
+(defun deno--get-test-name-at-point ()
+  "Extract test name from Deno.test() call at or before point."
+  (save-excursion
+    (let ((original-point (point))
+           test-name)
+      ;; First try the current line
+      (beginning-of-line)
+      (when (re-search-forward "Deno\\.test(\\s-*['\"`]\\([^'\"`,]+\\)" (line-end-position) t)
+        (setq test-name (match-string 1)))
+
+      ;; If not found, search backwards
+      (unless test-name
+        (goto-char original-point)
+        (when (re-search-backward "Deno\\.test(\\s-*['\"`]\\([^'\"`,]+\\)" nil t)
+          (setq test-name (match-string 1))))
+
+      test-name)))
+
+(defun deno--run-and-show-output (command)
+  "Run COMMAND and show output in a child frame."
+  (let* ((output-buffer "*Deno Test*")
+          (process-buffer (get-buffer-create output-buffer)))
+    (with-current-buffer process-buffer
+      (display-ansi-colors)
+      (erase-buffer)
+      (insert (format "Running: %s\n\n" command))
+      ;; Add keybinding to close the frame
+      (local-set-key (kbd "q") 'deno--close-test-frame)
+      (local-set-key (kbd "C-g") 'deno--close-test-frame))
+
+    ;; Show in child frame immediately
+    (deno--show-output-frame process-buffer)
+
+    ;; Run the command asynchronously
+    (let ((proc (start-process-shell-command
+                  "deno-test" process-buffer command)))
+      (set-process-sentinel proc 'deno--test-finished))))
+
+(defun deno--test-finished (process event)
+  "Handle test completion."
+  (when (memq (process-status process) '(exit signal))
+    (let ((buffer (process-buffer process)))
+      (with-current-buffer buffer
+        (display-ansi-colors)
+        (goto-char (point-max))
+        (insert (format "\n\nProcess finished with: %s" (string-trim event)))
+        (insert "\n\nPress 'q' or 'C-g' to close")))))
+
+(defun deno--close-test-frame ()
+  "Close the Deno test posframe."
+  (interactive)
+  (if (and (fboundp 'posframe-hide) (display-graphic-p))
+    (posframe-hide "*Deno Test*")
+    ;; For regular windows, just delete the window
+    (when-let ((win (get-buffer-window "*Deno Test*")))
+      (delete-window win))))
+
+(defun deno--show-output-frame (buffer)
+  "Show BUFFER in a child frame or popup window."
+  (if (and (fboundp 'posframe-show) (display-graphic-p))
+    ;; Use posframe if available (prettier)
+    (posframe-show buffer
+      :position (point)
+      :width 80
+      :height 20
+      :min-width 80
+      :min-height 10
+      :border-width 2
+      :border-color "orange"
+      :accept-focus t)  ; Allow focus so keys work
+    ;; Fallback to popup window
+    (let ((win (display-buffer buffer
+                 '((display-buffer-pop-up-window)
+                    (window-height . 0.3)))))
+      (with-selected-window win
+        (goto-char (point-max))))))
+
+;; Bind to a key
+;; (eval-after-load 'typescript-ts-mode
+;; (define-key 'typescript-ts-mode-map "C-c C-e" #'deno-run-test-at-point))
+
+(use-package copilot :ensure t
+  :config
+  (add-to-list
+    'copilot-major-mode-alist '("typescript-ts" . "typescript"))
+  (add-to-list
+    'copilot-major-mode-alist '("tsx-ts" . "typescriptreact"))
+
+  (setq copilot-enable-predicates '(noop))
+  (setq copilot-enable-display-predicates '(noot))
+  (defun chee/copilot-turn-on-unless-haha-jk ()
+    "Turn on `copilot-mode' if the buffer is writable."
+    (unless (or buffer-read-only (minibufferp))
+      (copilot-mode 1)))
+
+  (define-global-minor-mode
+    chee/global-copilot-mode
+    copilot-mode chee/copilot-turn-on-unless-haha-jk)
+
+  (chee/global-copilot-mode t)
+
+  :bind (:map copilot-mode-map ("C-<return>" . copilot-complete))
+  (:map copilot-completion-map
+    ("C-<return>" . copilot-accept-completion)
+    ("C-\\" . copilot-next-completion)))
+
+(add-to-list 'auto-mode-alist '("\\.jsonc\\'" . json-ts-mode))
+
+(use-package set-up-smartparens)
