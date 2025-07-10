@@ -39,22 +39,12 @@
     (if selected-p "]" " ")))
 
 
-
-
 (setq tab-line-separator "")
 (setq tab-line-tab-min-width 1)
 (setq tab-line-tab-max-width 30)
 
 ;; Remember the buffer when switching tabs
 (add-hook 'buffer-list-update-hook #'chee/remember-eat-buffer)
-
-
-(defun chee/eat-project-buffer-name nil
-  "Generate a buffer name the same as eat do"
-  (format "*%s-eat*"
-    (if (project-current)
-      (project-name (project-current))
-      "*eat*")))
 
 (defun chee/safe-project-name nil
   (when (project-current)
@@ -128,43 +118,6 @@
           (set-window-buffer eat-window buffer)
           (display-buffer-at-bottom buffer alist))))))
 
-(defvar chee/last-eat-buffer-per-project (make-hash-table :test 'equal)
-  "Hash table tracking last active eat buffer per project.")
-
-(defun chee/remember-eat-buffer ()
-  "Remember the current eat buffer for this project."
-  (when (and (eq major-mode 'eat-mode)
-          (chee/project-eat-buffer-p (buffer-name)))
-    (when-let ((project-name (chee/safe-project-name)))
-      (puthash project-name (current-buffer) chee/last-eat-buffer-per-project))))
-
-(defun chee/get-eat-window ()
-  "Get the window currently showing an eat buffer for this project."
-  (seq-find (lambda (w)
-              (with-current-buffer (window-buffer w)
-                (and (eq major-mode 'eat-mode)
-                  (chee/project-eat-buffer-p (buffer-name)))))
-    (window-list)))
-
-(defun chee/eat-other-window ()
-  "Toggle eat window, remembering last active tab."
-  (interactive)
-  (if-let ((eat-window (chee/get-eat-window)))
-    ;; Eat window is visible - hide it by selecting another window
-    (progn
-      (chee/remember-eat-buffer)
-      (other-window 1))
-    ;; Eat window not visible - show it with last buffer or create new
-    (if (project-current)
-      (let* ((project-name (chee/safe-project-name))
-              (last-buffer (gethash project-name chee/last-eat-buffer-per-project)))
-        (if (and last-buffer (buffer-live-p last-buffer))
-          ;; Restore last buffer
-          (pop-to-buffer last-buffer)
-          ;; Create new buffer
-          (eat-project t)))
-      (eat-other-window))))
-
 
 (defun chee/eat-new-tab nil
   (interactive)
@@ -206,7 +159,7 @@
   :config
   (add-to-list
     'display-buffer-alist
-    `(chee/project-eat-buffer-p
+    '(chee/project-eat-buffer-p
        (chee/display-eat-buffer)
        (direction . bottom)
        (inhibit-switch-frame . t)
@@ -239,4 +192,4 @@
     ("s-w" . (lambda nil (interactive) (let ((tab (current-buffer))) (chee/tab-line-next-tab) (kill-buffer tab))))
     ("s-j" . delete-window)))
 
-(provide 'set-up-eat)
+(provide 'set-up-terminal)

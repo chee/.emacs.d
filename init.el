@@ -52,7 +52,7 @@
 ;; Throw away anything that's been customized using ~M-x customize~ &c. This way if
 ;; I want to make emacs work a certain way it has to be added to my docfiles
 ;; config.
-(setq custom-file "/dev/null")
+(setq custom-file "~/.emacs.d/customize")
 
 (setq apropos-do-all t)
 (setq auth-sources (list "~/.authinfo.gpg"))
@@ -175,7 +175,8 @@
 ;; scrolling on a window should scroll that window, even if ffm is off
 (setq mouse-wheel-follow-mouse t)
 ;; think in pixels not in chars
-(if (and (not mac-initialized)
+(if (and
+      (or (not (boundp 'mac-initialized)) (not mac-initialized))
       (fboundp 'pixel-scroll-precision-mode))
   (pixel-scroll-precision-mode 1))
 (setf frame-resize-pixelwise t)
@@ -187,8 +188,8 @@
 ;; (setq scroll-preserve-screen-position 'always)
 
 ;; Focus follows 🐭
-(setq focus-follows-mouse t)
-(setq mouse-autoselect-window t)
+;; (setq focus-follows-mouse nil)
+;; (setq mouse-autoselect-window nil)
 
 ;; visuals 👀
 ;;(global-tab-line-mode -1)
@@ -210,11 +211,11 @@
 ;;   '(undecorated-round . t))
 (add-to-list 'default-frame-alist
   '(ns-transparent-titlebar . t))
-(add-to-list 'default-frame-alist '(fullscreen . nil))
-(add-to-list 'default-frame-alist '(height . 100))
-(add-to-list 'default-frame-alist '(width . 200))
-(add-to-list 'default-frame-alist '(top . 0))
-(add-to-list 'default-frame-alist '(left . 0))
+;; (add-to-list 'default-frame-alist '(fullscreen . nil))
+;; (add-to-list 'default-frame-alist '(height . 100))
+;; (add-to-list 'default-frame-alist '(width . 200))
+;; (add-to-list 'default-frame-alist '(top . 0))
+;; (add-to-list 'default-frame-alist '(left . 0))
 
 
 
@@ -229,14 +230,31 @@
 ;; most theme packages are quite costly to load
 ;; this is nearly free
 ;; (load-theme 'lychee t)
-(load-theme 'pale-rose t)
+;; (load-theme 'pale-rose t)
 
-;; nevertheless,
-;;(use-package gruvbox-theme :ensure t
-;;  :config (load-theme 'gruvbox t))
-;; (use-package doom-themes :ensure t
-;; fuckin love dracula i do
-;; :config (load-theme 'doom-dracula t))
+(defvar chee/themes '(pale-rose wombat)
+  "Themes. Dark then light.")
+
+(defun chee/select-themed-theme (dark-or-light)
+  (mapc #'disable-theme custom-enabled-themes)
+  (let ((fn (if (equal 'dark dark-or-light) #'car #'cadr)))
+    (load-theme (funcall fn chee/themes) 'no-confirm)))
+
+(defun chee/select-system-theme nil
+  (chee/select-themed-theme
+    (if (boundp 'ns-system-appearance)
+      ns-system-appearance 'light)))
+
+(when (boundp 'ns-system-appearance-change-functions)
+  (add-to-list
+    'ns-system-appearance-change-functions
+    #'chee/select-themed-theme))
+
+(use-package doom-themes :ensure t
+  :config
+  (setq chee/themes
+    '(doom-dracula doom-feather-light))
+  (chee/select-system-theme))
 
 ;; i am a fancy little rabbit with a fancy little font
 ;; i'm a fancy rabbit and i have fancy needs
@@ -288,7 +306,9 @@
 
 ;; My packages
 (defvar chee-directory (expand-file-name "chee" user-emacs-directory) "=^.^=")
+(defvar chee/vendor-directory (expand-file-name "vendor" user-emacs-directory) "vend")
 (add-to-list 'load-path chee-directory)
+(add-to-list 'load-path chee/vendor-directory)
 
 (use-package cheebug)
 
@@ -344,12 +364,12 @@
 
 (setq show-paren-context-when-offscreen t)
 
-(defun auto-fill-comments-mode ()
-  (interactive)
-  (setq-local comment-auto-fill-only-comments t)
-  (auto-fill-mode 1))
+;; (defun auto-fill-comments-mode ()
+;; (interactive)
+;; (setq-local comment-auto-fill-only-comments t)
+;; (auto-fill-mode 1))
 
-(add-hook 'prog-mode-hook #'auto-fill-comments-mode)
+;;(remove-hook 'prog-mode-hook #'auto-fill-comments-mode)
 
 (add-hook 'compilation-finish-functions
   (lambda (buf strg)
@@ -550,6 +570,8 @@
   ("s-]" . chee/indent-line-or-region)
   ("s-8" . insert-char)
   ("s-v" . yank)
+  ("s--" . text-scale-decrease)
+  ("s-=" . text-scale-increase)
 
   ("s-k" . delete-window)
 
@@ -603,6 +625,8 @@ It will no longer be dedicated, and it will close when
   ("M-<down>" . move-text-down))
 
 (defvar chee/solaire-disabled-buffer-names '("*scratch*"))
+(defvar chee/solaire-disabled-major-modes '(dired-mode))
+
 
 ;; solaire
 (use-package solaire-mode :ensure t
@@ -612,9 +636,11 @@ It will no longer be dedicated, and it will close when
   (defun solaire-mode-real-buffer-p ()
     "Return t if the current buffer is a real (file-visiting) buffer."
     (or
-      (seq-contains-p chee/solaire-disabled-buffer-names (buffer-name) #'string=)
+      (seq-contains-p
+        chee/solaire-disabled-buffer-names (buffer-name) #'string=)
       (bound-and-true-p org-src-mode)
-      (buffer-file-name (buffer-base-buffer))))
+      (buffer-file-name (buffer-base-buffer))
+      (seq-contains-p chee/solaire-disabled-major-modes major-mode)))
   :custom-face
   (treemacs-window-background-face ((t (:inherit solaire-default-face))))
   (treemacs-hl-line-face ((t (:inherit solaire-hl-line-face)))))
@@ -800,7 +826,8 @@ pick an inflection any inflection:
   :commands magit-status-mode
   :mode (("COMMIT_EDITMSG" . git-commit-mode))
   :config
-  (setq with-editor-shell-command-use-emacsclient nil))
+  (setq magit-save-repository-buffers nil)
+  (bind-key "C-v" magit-mode-menu project-prefix-map))
 
 (use-package transient :ensure t)
 (use-package forge :ensure t
@@ -826,6 +853,7 @@ pick an inflection any inflection:
 (use-package geiser :ensure t
   :config
   (setf geiser-scheme-implementation 'guile))
+(use-package wat-ts-mode :ensure t)
 
 ;; go
 (use-package go-ts-mode :ensure nil
@@ -946,8 +974,8 @@ If already in the settings frame, hide it."
         (make-frame-invisible settings-frame))
       ;; If settings frame exists but we're not in it, select and raise it
       (settings-frame
-        (raise-frame settings-frame)
-        (select-frame settings-frame))
+        (select-frame settings-frame)
+        (raise-frame settings-frame))
       ;; If no settings frame exists, create one
       (t
         (let ((new-frame (make-frame '((name . "settings")
@@ -959,12 +987,7 @@ If already in the settings frame, hide it."
 
 (bind-key "s-," #'chee/open-settings)
 
-;; apheleia / formatting / prettier etc
-(use-package apheleia
-  :ensure t
-  :config
-  (apheleia-global-mode +1)
-  :after tramp)
+
 
 ;; restart-emacs
 (use-package restart-emacs
@@ -1026,14 +1049,6 @@ If already in the settings frame, hide it."
 (use-package css-in-js-mode
   :ensure (:host github :repo "orzechowskid/tree-sitter-css-in-js"))
 
-(use-package treesit-auto
-  :ensure t
-  :custom
-  (treesit-auto-install 'prompt)
-  :config
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode))
-
 
 ;; undo tree
 (use-package undo-tree
@@ -1054,7 +1069,7 @@ If already in the settings frame, hide it."
   :bind
   (("C-s-z" . 'vundo)))
 
-(use-package set-up-eat)
+(use-package set-up-terminal)
 
 (use-package ansi-color
   :config
@@ -1113,6 +1128,27 @@ If already in the settings frame, hide it."
 	(setq gc-cons-percentage 0.1)
 	(gcmh-mode t))
 
-(when (eq system-type 'darwin)
-  (add-hook 'emacs-startup-hook
-    (lambda () (do-applescript "tell application \"Emacs\" to activate"))))
+(when (eq system-type 'darwin) (raise-frame))
+(recentf-mode 1)
+
+(defvar chee/recently-closed-files nil)
+(defun chee/recently-closed-add nil
+  (when (buffer-file-name)
+    (setq chee/recently-closed-files
+      (cons (buffer-file-name)
+        (delete (buffer-file-name) chee/recently-closed-files)))))
+(defun chee/recently-closed-reopen nil
+  "Reopen the last closed file, popping it off the list."
+  (interactive)
+  (when-let ((file (pop chee/recently-closed-files)))
+    (find-file file)))
+(add-hook 'kill-buffer-hook 'chee/recently-closed-add)
+(bind-key "s-t" #'chee/recently-closed-reopen)
+
+(use-package janet-mode :ensure t)
+
+(use-package zotero :ensure t
+  :commands (zotero-browser)
+  :init (use-package zotero-browser))
+
+(unless (server-running-p) (server-start))

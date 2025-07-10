@@ -2,6 +2,7 @@
 (provide 'set-up-ide)
 (use-package cheebug)
 
+
 (defvar chee/deno-project-files '("deno.json" "deno.jsonc" "deno.lock")
   "List of files that indicate we're in a Deno project.")
 
@@ -55,10 +56,13 @@
   (let ((formatter
           (pcase major-mode
             ('js-mode 'denofmt-js)
+            ('web-mode 'denofmt)
             ('typescript-ts-mode 'denofmt-ts)
             ('typescript-mode 'denofmt-ts)
             ('tsx-ts-mode 'denofmt-tsx)
             ('json-ts-mode 'denofmt-json)
+            ('web-mode 'denofmt-html)
+            ('css-ts-mode 'denofmt-css)
             ('markdown-mode 'denofmt-md))))
     (when formatter (setq-local apheleia-formatter formatter))))
 
@@ -75,6 +79,7 @@
 
 (use-package lsp-mode
   :ensure t
+
   :init
 
   (setq lsp-keymap-prefix "s-l")
@@ -125,6 +130,8 @@
          :url "http://json.schemastore.org/eslintrc")
        (:fileMatch [".eslintrc"]
          :url "http://json.schemastore.org/eslintrc")
+       (:fileMatch ["biome.json"]
+         :url "https://biomejs.dev/schemas/2.0.5/schema.json")
        (:fileMatch ["deno.json"]
          :url "https://raw.githubusercontent.com/denoland/deno/main/cli/schemas/config-file.v1.json")
        (:fileMatch ["deno.jsonc"]
@@ -135,7 +142,8 @@
   (typescript-ts-mode . lsp)
   (typescript-mode . lsp)
   (json-ts-mode . lsp)
-
+  :config
+  (use-package lsp-biome)
   :commands lsp
   :bind (:map lsp-mode-map
           ("s-." . lsp-execute-code-action)
@@ -192,7 +200,7 @@
   (let* ((output-buffer "*Deno Test*")
           (process-buffer (get-buffer-create output-buffer)))
     (with-current-buffer process-buffer
-      (display-ansi-colors)
+      (chee/ansi-colors-mode)
       (erase-buffer)
       (insert (format "Running: %s\n\n" command))
       ;; Add keybinding to close the frame
@@ -212,7 +220,7 @@
   (when (memq (process-status process) '(exit signal))
     (let ((buffer (process-buffer process)))
       (with-current-buffer buffer
-        (display-ansi-colors)
+        (chee/ansi-colors-mode)
         (goto-char (point-max))
         (insert (format "\n\nProcess finished with: %s" (string-trim event)))
         (insert "\n\nPress 'q' or 'C-g' to close")))))
@@ -276,5 +284,39 @@
     ("C-\\" . copilot-next-completion)))
 
 (add-to-list 'auto-mode-alist '("\\.jsonc\\'" . json-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.js\\'" . typescript-ts-mode))
+
+;; apheleia / formatting / prettier etc
+(use-package apheleia
+  :ensure t
+  :config
+  (apheleia-global-mode +1)
+  (add-to-list 'apheleia-formatters
+    '(denofmt-css "deno" "fmt" "-" "--ext" "css"))
+  (add-to-list 'apheleia-formatters
+    '(denofmt-html "deno" "fmt" "-" "--ext" "html"))
+  :after tramp)
+
 
 (use-package set-up-smartparens)
+(use-package set-up-typescript)
+
+(use-package treesit-auto
+  :ensure t
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
+
+(use-package astro-ts-mode :ensure t
+  :after treesit-auto lsp
+  :init
+  (add-hook 'astro-ts-mode-hook #'lsp)
+  (let ((astro-recipe (make-treesit-auto-recipe
+                        :lang 'astro
+                        :ts-mode 'astro-ts-mode
+                        :url "https://github.com/virchau13/tree-sitter-astro"
+                        :revision "master"
+                        :source-dir "src")))
+    (add-to-list 'treesit-auto-recipe-list astro-recipe)))

@@ -41,12 +41,13 @@
 ;; 		(sp-local-pair "«" "»")))
 ;; No heading:1 ends here
 
+
 ;; [[file:../../notebook/docfiles/emacs/setup/smartparens.org::+begin_src emacs-lisp :comments both :mkdirp yes :tangle ~/.emacs.d/chee/set-up-smartparens.el][No heading:2]]
 (use-package smartparens
 	:ensure t
-	:hook
-	(text-mode . smartparens-mode)
-	(prog-mode . smartparens-strict-mode)
+	;; :hook
+	;; (text-mode . smartparens-mode)
+	;; (prog-mode . smartparens-strict-mode)
 	:bind (:map smartparens-mode-map ("C-." . sp-rewrap-sexp)
 			    ("C-<" . sp-backward-sexp)
 			    ("C->" . sp-forward-sexp)
@@ -64,7 +65,7 @@
 			    ("s-<up>" . sp-beginning-of-sexp)
 			    ("s-<down>" . sp-end-of-sexp)))
 
-(unbind-key "M-<down>" smartparens-mode-map)
+
 
 (provide 'set-up-smartparens)
 ;; No heading:2 ends here
