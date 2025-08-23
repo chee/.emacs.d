@@ -142,6 +142,11 @@
   (typescript-ts-mode . lsp)
   (typescript-mode . lsp)
   (json-ts-mode . lsp)
+  (js-ts-mode . lsp)
+  (rust-ts-mode . lsp)
+  (css-ts-mode . lsp)
+  (web-mode . lsp)
+  (markdown-mode . lsp)
   :config
   (use-package lsp-biome)
   :commands lsp
@@ -264,20 +269,9 @@
     'copilot-major-mode-alist '("typescript-ts" . "typescript"))
   (add-to-list
     'copilot-major-mode-alist '("tsx-ts" . "typescriptreact"))
-
   (setq copilot-enable-predicates '(noop))
   (setq copilot-enable-display-predicates '(noot))
-  (defun chee/copilot-turn-on-unless-haha-jk ()
-    "Turn on `copilot-mode' if the buffer is writable."
-    (unless (or buffer-read-only (minibufferp))
-      (copilot-mode 1)))
-
-  (define-global-minor-mode
-    chee/global-copilot-mode
-    copilot-mode chee/copilot-turn-on-unless-haha-jk)
-
-  (chee/global-copilot-mode t)
-
+  (global-copilot-mode)
   :bind (:map copilot-mode-map ("C-<return>" . copilot-complete))
   (:map copilot-completion-map
     ("C-<return>" . copilot-accept-completion)

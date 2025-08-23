@@ -134,6 +134,7 @@
 (delete-selection-mode t)
 (setq mouse-drag-and-drop-region t)
 (setq mouse-drag-and-drop-region-cross-program t)
+(xterm-mouse-mode 1)
 
 ;; Be a friendly member of society
 ;; - Disable weird emacs files in the [[https://en.wikipedia.org/wiki/Working_directory][cwd]]
@@ -329,6 +330,8 @@
 		   rust-mode "🦀"
 		   zig-mode "🦎"
 		   scheme-mode "Lisp-1")))
+
+
 
 ;; ahem.
 ;; These should probably be in the emacs block. So should the stuff in the "be normal" area, tbh.
@@ -1145,7 +1148,7 @@ If already in the settings frame, hide it."
 (add-hook 'kill-buffer-hook 'chee/recently-closed-add)
 (bind-key "s-t" #'chee/recently-closed-reopen)
 
-(use-package janet-mode :ensure t)
+;; (use-package janet-mode :ensure t)
 
 (use-package zotero :ensure t
   :commands (zotero-browser)
