@@ -305,6 +305,7 @@
 
 (use-package astro-ts-mode :ensure t
   :after treesit-auto lsp
+  :mode ("\\.astro\\'" . astro-ts-mode)
   :init
   (add-hook 'astro-ts-mode-hook #'lsp)
   (let ((astro-recipe (make-treesit-auto-recipe
@@ -314,3 +315,9 @@
                         :revision "master"
                         :source-dir "src")))
     (add-to-list 'treesit-auto-recipe-list astro-recipe)))
+
+
+(setq treesit-language-source-alist
+  '((astro "https://github.com/virchau13/tree-sitter-astro")
+     (css "https://github.com/tree-sitter/tree-sitter-css")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))

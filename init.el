@@ -68,6 +68,10 @@
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+;; Recent elpaca master renamed `elpaca-repos-directory' -> `elpaca-sources-directory'
+;; (repos/ -> sources/). Our packages are all cloned under repos/, so point the new
+;; variable there to avoid re-cloning everything.
+(defvar elpaca-sources-directory elpaca-repos-directory)
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
                         :ref nil :depth 1 :inherit ignore
                         :files (:defaults "elpaca-test.el" (:exclude "extensions"))
@@ -1104,8 +1108,8 @@ If already in the settings frame, hide it."
   :custom (which-key-mode t) (which-key-idle-delay 0.01))
 
 ;; .cook files
-(use-package cook-mode
-  :ensure (cook-mode :host github :repo "cooklang/cook-mode"))
+                                        ;(use-package cook-mode
+                                        ;:ensure (cook-mode :host github :repo "cooklang/cook-mode"))
 
 ;; yaml
 (use-package yaml-mode
