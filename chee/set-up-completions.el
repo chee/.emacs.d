@@ -91,7 +91,7 @@
 	(consult-customize
 	  consult-ripgrep consult-git-grep consult-grep
 	  consult-bookmark consult-recent-file
-	  consult--source-recent-file consult--source-project-recent-file   consult--source-bookmark
+	  consult-source-recent-file consult-source-project-recent-file   consult-source-bookmark
 	  :preview-key "s-f p"))
 
 (use-package consult-flycheck :ensure t :after flycheck)

@@ -64,7 +64,7 @@
 
 ;; Bootstrap package manager
 ;; https://github.com/progfolio/elpaca and [[https://github.com/jwiegley/use-package][use-package.el]]
-(defvar elpaca-installer-version 0.11)
+(defvar elpaca-installer-version 0.12)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -75,7 +75,7 @@
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
                         :ref nil :depth 1 :inherit ignore
                         :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-                        :build (:not elpaca--activate-package)))
+                        :build (:not elpaca-activate)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
         (build (expand-file-name "elpaca/" elpaca-builds-directory))
         (order (cdr elpaca-order))
@@ -703,7 +703,10 @@ pick an inflection any inflection:
 	      completion-at-point-functions)))
   (add-hook 'prog-mode-hook #'+tempel-buffer-setup)
   (add-hook 'text-mode-hook #'+tempel-buffer-setup))
-(use-package tempel-collection :ensure t
+;; HEAD declares (emacs "31.1"); this is the last revision that builds on 30.
+;; It already carries the typescript-ts-base-mode/json-ts-mode/etc. aliases.
+(use-package tempel-collection
+  :ensure (:ref "6292604c1d5ed0044ce0beb2d46c73697dc66ed3" :depth nil)
   :after tempel)
 
 ;; E-mail
@@ -744,6 +747,11 @@ pick an inflection any inflection:
 (use-package set-up-completions :ensure nil)
 
 (use-package set-up-puni :ensure nil)
+
+;; Tree-sitter
+;; Grammar pins + mode remaps. Must come before any *-ts-mode package, since
+;; several of them call `treesit-ready-p' at load time.
+(use-package set-up-treesit :ensure nil)
 
 ;; Generic Files
 ;; add basic syntax highlighting for lots of files
@@ -890,6 +898,7 @@ pick an inflection any inflection:
 	    (setq web-mode-script-padding 0))))
 
 (use-package set-up-ide)
+(use-package set-up-patchwork)
 
 ;; nginx
 (use-package nginx-mode :ensure t

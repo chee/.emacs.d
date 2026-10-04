@@ -56,7 +56,6 @@
   (let ((formatter
           (pcase major-mode
             ('js-mode 'denofmt-js)
-            ('web-mode 'denofmt)
             ('typescript-ts-mode 'denofmt-ts)
             ('typescript-mode 'denofmt-ts)
             ('tsx-ts-mode 'denofmt-tsx)
@@ -263,7 +262,12 @@
 ;; (eval-after-load 'typescript-ts-mode
 ;; (define-key 'typescript-ts-mode-map "C-c C-e" #'deno-run-test-at-point))
 
+;; Emacs 30 bundles track-changes 1.2 but copilot wants 1.4, so pull it in
+;; explicitly — elpaca only falls back to the built-in when it isn't queued.
+(use-package track-changes :ensure t)
+
 (use-package copilot :ensure t
+  :after track-changes
   :config
   (add-to-list
     'copilot-major-mode-alist '("typescript-ts" . "typescript"))
@@ -295,29 +299,11 @@
 (use-package set-up-smartparens)
 (use-package set-up-typescript)
 
-(use-package treesit-auto
-  :ensure t
-  :custom
-  (treesit-auto-install 'prompt)
-  :config
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode))
-
-(use-package astro-ts-mode :ensure t
-  :after treesit-auto lsp
+;; Grammars, mode remaps and font-lock level all live in set-up-treesit.
+;; v4 of astro-ts-mode declares (emacs "31"); we're on 30, so stay on v3.
+(use-package astro-ts-mode
+  :ensure (:ref "v3.0.2" :depth nil)
+  :after lsp
   :mode ("\\.astro\\'" . astro-ts-mode)
   :init
-  (add-hook 'astro-ts-mode-hook #'lsp)
-  (let ((astro-recipe (make-treesit-auto-recipe
-                        :lang 'astro
-                        :ts-mode 'astro-ts-mode
-                        :url "https://github.com/virchau13/tree-sitter-astro"
-                        :revision "master"
-                        :source-dir "src")))
-    (add-to-list 'treesit-auto-recipe-list astro-recipe)))
-
-
-(setq treesit-language-source-alist
-  '((astro "https://github.com/virchau13/tree-sitter-astro")
-     (css "https://github.com/tree-sitter/tree-sitter-css")
-     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")))
+  (add-hook 'astro-ts-mode-hook #'lsp))
